@@ -1,245 +1,190 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+// See https://aka.ms/new-console-template for more information
 
-public class Course
+using System;
+
+
+
+public class Result
 {
-    // Data about a particular course
-    public string Title;
+    public List<int> _rows { get; set; }
 
-    public int ObstacleCount;
+    public List<int> _cols { get; set; }
 
-    public Course(string courseTitle, int obstacles)
+    public Result(List<int> rows, List<int> cols)
     {
-        Title = courseTitle;
-        ObstacleCount = obstacles;
-    }
-
-    public override bool Equals(object obj)
-    {
-        if (obj is not Course c)
-        {
-            return false;
-        }
-
-        return c.Title == this.Title &&
-               c.ObstacleCount == this.ObstacleCount;
-    }
-
-    public override int GetHashCode()
-    {
-        return (Title == null ? 0 : Title.GetHashCode()) * ObstacleCount;
+        _rows = rows;
+        _cols = cols;
     }
 }
-
-public class Run
+public class SnakeLanes
 {
-    // Data and methods about a single run
 
-    public Course Course;
-
-    public bool Complete;
-
-    public List<int> ObstacleTimes;
-
-    public Run(Course runCourse)
+    static void Main()
     {
-        Course = runCourse;
-
-        Complete = false;
-
-        ObstacleTimes = new List<int>();
-    }
-
-    public void AddObstacleTime(int obstacleTime)
-    {
-        if (Complete)
+        char[][] board1 =
         {
-            throw new InvalidOperationException(
-                "Cannot add obstacle to complete run");
-        }
+            new char[] { '+', '+', '+', '0', '+', '0', '0' },
+             new char[] {'0', '0', '+', '0', '0', '0', '0' },
+              new char[] { '0', '0', '0', '0', '+', '0', '0' },
+               new char[] { '+', '+', '+', '0', '0', '+', '0' },
+                new char[] { '0', '0', '0', '0', '0', '0', '0' },
 
-        ObstacleTimes.Add(obstacleTime);
-
-        if (ObstacleTimes.Count == Course.ObstacleCount)
-        {
-            Complete = true;
-        }
-    }
-
-    public int GetRunTime()
-    {
-        return ObstacleTimes.Sum();
-    }
-}
-
-public class RunCollection
-{
-    public Course Course;
-
-    public List<Run> Runs;
-
-    public RunCollection(Course collectionCourse)
-    {
-        Course = collectionCourse;
-
-        Runs = new List<Run>();
-    }
-
-    public int GetNumRuns()
-    {
-        return Runs.Count;
-    }
-
-    public void AddRun(Run run)
-    {
-        if (!run.Course.Equals(Course))
-        {
-            throw new ArgumentException(
-                "Run course does not match collection course");
-        }
-
-        Runs.Add(run);
-    }
-
-    public int PersonalBest()
-    {
-        return Runs
-            .Where(run => run.Complete)
-            .Select(run => run.GetRunTime())
-            .DefaultIfEmpty(int.MaxValue)
-            .Min();
-    }
-
-    public int BestOfBests()
-    {
-        if(Course==null)
-        {
-            return 0;
-        }
-        int ObstacleCount = Course.ObstacleCount;
-        int[] bestofTimes=new int[ObstacleCount];
-
-        for(int i=0; i< bestofTimes.Length; i++)
-        {
-            bestofTimes[i] = int.MaxValue;
-        }
-
-        foreach(var run in Runs)
-        {
-            int obstacleCount = Course.ObstacleCount;
-
-            for(int i = 0; i < run.ObstacleTimes.Count; i++)
-            {
-                bestofTimes[i] = Math.Min(run.ObstacleTimes[i], bestofTimes[i]);
-            }
-            
-        }
-        int sum = 0;
-        foreach (var best in bestofTimes)
-        {
-            sum=sum+best;
-        }
-        return sum;
-    }
-}
-
-public class Program
-{
-    static void Main(string[] args)
-    {
-        //TestRun();
-
-        TestRunCollection();
-    }
-
-    public static void TestRun()
-    {
-        Console.WriteLine("Running TestRun");
-
-        Course testCourse =
-            new Course("Test course", 2);
-
-        Run testRun =
-            new Run(testCourse);
-
-        testRun.AddObstacleTime(3);
-
-        Console.WriteLine(
-            "Run Complete: " + testRun.Complete);
-
-        testRun.AddObstacleTime(5);
-
-        Console.WriteLine(
-            "Run Complete: " + testRun.Complete);
-
-        Console.WriteLine(
-            "Run Time: " + testRun.GetRunTime());
-
-        try
-        {
-            testRun.AddObstacleTime(4);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-    }
-
-    public static RunCollection MakeRunCollection(
-        Course course,
-        int[][] obstacleData)
-    {
-        RunCollection runCollection =
-            new RunCollection(course);
-
-        foreach (int[] runData in obstacleData)
-        {
-            Run run = new Run(course);
-
-            foreach (int obstacleTime in runData)
-            {
-                run.AddObstacleTime(obstacleTime);
-            }
-
-            runCollection.AddRun(run);
-        }
-
-        
-        return runCollection;
-    }
-
-    public static void TestRunCollection()
-    {
-        //Console.WriteLine(
-        //    "Running TestRunCollection");
-
-        int[][] obstacleData =
-        {
-            new int[] {3,4,5,6},
-            new int[] {4,4,4,5},
-            new int[] {4,5,4,6},
-            new int[] {5,5,3}
         };
 
-        Course testCourse =
-            new Course("Test course", 4);
 
-        RunCollection runCollection =
-            MakeRunCollection(
-                testCourse,
-                obstacleData);
+        Result result1=FindPassable(board1 );
+        
+        Console.WriteLine( "Passable rows position of board1:" + string.Join(",",result1._rows) );
 
-        Console.WriteLine(
-            "Number of Runs: " +
-            runCollection.GetNumRuns());
+        Console.WriteLine("Passable columns position  of board1:" + string.Join(",", result1._cols));
 
-        Console.WriteLine(
-            "Personal Best: " +
-            runCollection.PersonalBest());
+        char[][] board2 =
+        {
+            new char[] {'+', '+', '+', '0', '+', '0', '0'},
+            new char[] { '0', '0', '0', '0', '0', '+', '0' },
+            new char[] { '0', '0', '+', '0', '0', '0', '0' },
+            new char[] { '0', '0', '0', '0', '+', '0', '0' },
+            new char[] { '+', '+', '+', '0', '0', '0', '+' },
+        };
 
-        Console.WriteLine(
-            "Best Of Bests: " +
-            runCollection.BestOfBests());
+
+        Result result2 = FindPassable(board2);
+
+        Console.WriteLine("Passable rows position of board2:" + string.Join(",", result2._rows));
+
+        Console.WriteLine("Passable columns position  of board2:" + string.Join(",", result2._cols));
+
+
+
+        char[][] board3 =
+        {
+            new char[] {'+', '+', '+', '0', '+', '0', '0'},
+            new char[] { '0', '0', '0', '0', '0', '0', '0' },
+            new char[] { '0', '0', '+', '+', '0', '+', '0'},
+            new char[] { '0', '0', '0', '0', '+', '0', '0'},
+            new char[] {'+', '+', '+', '0', '0', '0', '+' },
+        };
+
+
+        Result result3 = FindPassable(board3);
+
+        Console.WriteLine("Passable rows position of board3:" + string.Join(",", result3._rows));
+
+        Console.WriteLine("Passable columns position  of board3:" + string.Join(",", result3._cols));
+
+
+
+
+        char[][] board4 =
+        {
+            new char[] {'+' }
+        };
+
+
+        Result result4 = FindPassable(board4);
+
+        Console.WriteLine("Passable rows position of board4:" + string.Join(",", result4._rows));
+
+        Console.WriteLine("Passable columns position  of board4:" + string.Join(",", result4._cols));
+
+
+
+
+        char[][] board5 =
+        {
+            new char[] {'0' }
+        };
+
+
+        Result result5 = FindPassable(board5);
+
+        Console.WriteLine("Passable rows position of board5:" + string.Join(",", result5._rows));
+
+        Console.WriteLine("Passable columns position  of board5:" + string.Join(",", result5._cols));
+
+
+
+
+
+        char[][] board6 =
+        {
+            new char[] { '0', '0' },
+            new char[] { '0', '0' },
+            new char[] { '0', '0' },
+            new char[] { '0', '0' }
+        };
+
+
+        Result result6 = FindPassable(board6);
+
+        Console.WriteLine("Passable rows position of board6:" + string.Join(",", result6._rows));
+
+        Console.WriteLine("Passable columns position  of board6:" + string.Join(",", result6._cols));
+
+
+        Console.ReadLine();
+
+
+
+
+    }
+    public static Result FindPassable(char[][] board)
+    {
+        Result result;
+
+        List<int> rows = new List<int>();
+
+        List<int> cols = new List<int>();
+
+        int rowLength = board.Length;
+
+        int columnLength = board[0].Length;
+
+
+        for (int row = 0; row < rowLength; row++)
+        {
+            bool passable = true;
+            //row checking
+            for (int col = 0; col < columnLength; col++)
+            {
+                if (board[row][col] == '+')
+                {
+                    passable = false;
+                    break;
+                }
+
+            }
+            if (passable)
+            {
+                rows.Add(row);
+            }
+
+
+        }
+
+        //column checking
+
+
+
+        for (int col = 0; col < columnLength; col++)
+        {
+            bool passable = true;
+            for (int row = 0; row < rowLength; row++)
+            {
+                if (board[row][col] == '+')
+                {
+                    passable = false;
+                    break;
+                }
+            }
+            if (passable)
+            {
+                cols.Add(col);
+            }
+        }
+
+        return new Result(rows, cols);
     }
 }
+
+
